@@ -350,4 +350,18 @@ echo urlencode(~'cat /flag');
 最终的构造：?who=1&you=?(~%8C%86%8C%8B%9A%92)(~%9C%9E%8B%DF%D0%99%93%9E%98):&are=1
 <img width="2911" height="533" alt="image" src="https://github.com/user-attachments/assets/e314541a-8ca7-4b3c-b799-6de8777d43eb" />
 
+Go
+进入界面后如下显示：
+{"username":"guest","role":"guest","message":"Access denied. Only role='admin' can view the flag."}
+
+正常来说构造json参数就行：{"username":"admin","role":"admin"}
+
+但是我复现的时候没有任何回显，然后wp说存在waf： Go 标准库中的 JSON、XML（以及流行的第三方 YAML）解析器在处理非受信数据时，存在一些设计上或默认行为上的“特性”，这些“特性”在特定场景下很容易被攻击者利用，演变成严重的安全漏洞。此处Go JSON 解析器最关键的缺陷之一，因为它与几乎所有其他主流语言的 JSON 解析器行为都不同（它们通常是严格大小写敏感的）。攻击者可以轻易构造 payload，如 {"action": "UserAction", "aCtIoN": "AdminAction"}，利用这种差异性绕过权限检查。
+因此这里构造的是：
+
+{"username":"admin","Role":"admin"}
+
+上古遗迹档案馆
+
+最近因为刚好在看SQL注入所以把这个也写一下，sqlmap我还没用过，感觉还没石粒，等我再熟悉熟悉之后再用，这里
 
